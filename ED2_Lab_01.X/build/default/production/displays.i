@@ -1,4 +1,4 @@
-# 1 "main.c"
+# 1 "displays.c"
 # 1 "<built-in>" 1
 # 1 "<built-in>" 3
 # 288 "<built-in>" 3
@@ -6,22 +6,11 @@
 # 1 "<built-in>" 2
 # 1 "C:/Program Files/Microchip/MPLABX/v6.05/packs/Microchip/PIC16Fxxx_DFP/1.3.42/xc8\\pic\\include\\language_support.h" 1 3
 # 2 "<built-in>" 2
-# 1 "main.c" 2
-# 10 "main.c"
-#pragma config FOSC = INTRC_NOCLKOUT
-#pragma config WDTE = OFF
-#pragma config PWRTE = OFF
-#pragma config MCLRE = OFF
-#pragma config CP = OFF
-#pragma config CPD = OFF
-#pragma config BOREN = OFF
-#pragma config IESO = OFF
-#pragma config FCMEN = OFF
-#pragma config LVP = OFF
+# 1 "displays.c" 2
 
 
-#pragma config BOR4V = BOR40V
-#pragma config WRT = OFF
+
+
 
 
 
@@ -2642,43 +2631,10 @@ extern __bank0 unsigned char __resetbits;
 extern __bank0 __bit __powerdown;
 extern __bank0 __bit __timeout;
 # 29 "C:/Program Files/Microchip/MPLABX/v6.05/packs/Microchip/PIC16Fxxx_DFP/1.3.42/xc8\\pic\\include\\xc.h" 2 3
-# 26 "main.c" 2
+# 8 "displays.c" 2
 
 # 1 "C:\\Program Files\\Microchip\\xc8\\v2.40\\pic\\include\\c90\\stdint.h" 1 3
-# 27 "main.c" 2
-
-# 1 "./IOCB.h" 1
-# 14 "./IOCB.h"
-# 1 "C:\\Program Files\\Microchip\\xc8\\v2.40\\pic\\include\\c90\\stdint.h" 1 3
-# 14 "./IOCB.h" 2
-
-
-
-void ioc_init(char pin);
-# 28 "main.c" 2
-
-# 1 "./ADC_setup.h" 1
-# 14 "./ADC_setup.h"
-# 1 "C:\\Program Files\\Microchip\\xc8\\v2.40\\pic\\include\\c90\\stdint.h" 1 3
-# 14 "./ADC_setup.h" 2
-
-
-
-void adc_init(int channel);
-int adc_read();
-void adc_change_channel(int channel);
-int adc_get_channel();
-# 29 "main.c" 2
-
-# 1 "./Setup_TMR0.h" 1
-# 14 "./Setup_TMR0.h"
-# 1 "C:\\Program Files\\Microchip\\xc8\\v2.40\\pic\\include\\c90\\stdint.h" 1 3
-# 14 "./Setup_TMR0.h" 2
-
-
-
-void TMR0_init(void);
-# 30 "main.c" 2
+# 9 "displays.c" 2
 
 # 1 "./displays.h" 1
 # 14 "./displays.h"
@@ -2714,7 +2670,7 @@ unsigned char displaylist [16] = {
 
 void mux(int selector);
 void display_hex(int value);
-# 31 "main.c" 2
+# 10 "displays.c" 2
 
 
 
@@ -2722,117 +2678,27 @@ void display_hex(int value);
 
 
 
-int bandera = 0;
-
-int adc_var = 0;
-int select = 0;
-
-
-void setup(void);
-void counter(void);
-
-
-
-void main(void){
-    setup();
-    adc_init(0);
-    TMR0_init();
-    TMR0 = 252;
-    while(1){
-        if (ADCON0bits.GO == 0) {
-            ADCON0bits.GO = 1;
-            display_hex(adc_var);
-        }
-
+void mux(int selector){
+    if (selector == 0){
+        PORTC = displaylist[HEX1];
+        PORTEbits.RE0 = 1;
+        PORTEbits.RE1 = 0;
+    }
+    if (selector == 1){
+        PORTC = displaylist[HEX2];
+        PORTEbits.RE0 = 0;
+        PORTEbits.RE1 = 1;
     }
 }
 
-
-void __attribute__((picinterrupt(("")))) isr(void){
-    if (INTCONbits.T0IF == 1){
-        INTCONbits.T0IE = 0;
-        TMR0 = 252;
-        if (select == 0){
-            mux(select);
-            select = 1;
-        }
-        if (select == 1){
-            mux(select);
-            select = 0;
-        }
+void display_hex(int value){
+    if (value >= PORTD){
+        PORTEbits.RE2 = 1;
     }
-    if (INTCONbits.RBIF == 1){
-        counter();
-        INTCONbits.RBIF = 0;
-    }
-    if (PIR1bits.ADIF == 1){
-        adc_var = adc_read();
-        PIR1bits.ADIF = 0;
-    }
+    else {
+        PORTEbits.RE2 = 0;
     }
 
-
-void setup(void){
-
-
-
-
-
-
-    TRISBbits.TRISB6 = 1;
-    TRISBbits.TRISB7 = 1;
-
-    TRISBbits.TRISB0 = 0;
-    TRISBbits.TRISB1 = 0;
-
-    TRISC = 0;
-    TRISD = 0;
-    TRISE = 0;
-
-
-    PORTA = 0;
-    PORTB = 0;
-    PORTC = 0;
-    PORTD = 0;
-    PORTE = 0;
-
-
-
-
-
-
-
-    INTCONbits.GIE = 1;
-    INTCONbits.PEIE = 1;
-
-
-
-
-
-
-
-    ioc_init(7);
-
-    ioc_init(6);
-
-
-
-
-    OSCCONbits.IRCF = 0b110 ;
-    OSCCONbits.SCS = 1;
-}
-# 158 "main.c"
-void counter(void){
-    if (PORTBbits.RB6 == 0){
-        bandera = 1;}
-    if (PORTBbits.RB6 == 1 && bandera == 1){
-        PORTD--;
-        bandera = 0;
-    }
-    if (PORTBbits.RB7 == 0){
-        bandera = 2;}
-    if (PORTBbits.RB7 == 1 && bandera == 2){
-        PORTD++;
-        bandera = 0;
-    }
+    HEX1 = (value%16);
+    HEX2 = (value/16);
 }

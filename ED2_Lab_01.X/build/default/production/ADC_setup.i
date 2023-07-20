@@ -1,4 +1,4 @@
-# 1 "main.c"
+# 1 "ADC_setup.c"
 # 1 "<built-in>" 1
 # 1 "<built-in>" 3
 # 288 "<built-in>" 3
@@ -6,25 +6,16 @@
 # 1 "<built-in>" 2
 # 1 "C:/Program Files/Microchip/MPLABX/v6.05/packs/Microchip/PIC16Fxxx_DFP/1.3.42/xc8\\pic\\include\\language_support.h" 1 3
 # 2 "<built-in>" 2
-# 1 "main.c" 2
-# 10 "main.c"
-#pragma config FOSC = INTRC_NOCLKOUT
-#pragma config WDTE = OFF
-#pragma config PWRTE = OFF
-#pragma config MCLRE = OFF
-#pragma config CP = OFF
-#pragma config CPD = OFF
-#pragma config BOREN = OFF
-#pragma config IESO = OFF
-#pragma config FCMEN = OFF
-#pragma config LVP = OFF
-
-
-#pragma config BOR4V = BOR40V
-#pragma config WRT = OFF
+# 1 "ADC_setup.c" 2
 
 
 
+
+
+
+
+# 1 "./ADC_setup.h" 1
+# 13 "./ADC_setup.h"
 # 1 "C:/Program Files/Microchip/MPLABX/v6.05/packs/Microchip/PIC16Fxxx_DFP/1.3.42/xc8\\pic\\include\\xc.h" 1 3
 # 18 "C:/Program Files/Microchip/MPLABX/v6.05/packs/Microchip/PIC16Fxxx_DFP/1.3.42/xc8\\pic\\include\\xc.h" 3
 extern const char __xc8_OPTIM_SPEED;
@@ -2642,23 +2633,8 @@ extern __bank0 unsigned char __resetbits;
 extern __bank0 __bit __powerdown;
 extern __bank0 __bit __timeout;
 # 29 "C:/Program Files/Microchip/MPLABX/v6.05/packs/Microchip/PIC16Fxxx_DFP/1.3.42/xc8\\pic\\include\\xc.h" 2 3
-# 26 "main.c" 2
+# 13 "./ADC_setup.h" 2
 
-# 1 "C:\\Program Files\\Microchip\\xc8\\v2.40\\pic\\include\\c90\\stdint.h" 1 3
-# 27 "main.c" 2
-
-# 1 "./IOCB.h" 1
-# 14 "./IOCB.h"
-# 1 "C:\\Program Files\\Microchip\\xc8\\v2.40\\pic\\include\\c90\\stdint.h" 1 3
-# 14 "./IOCB.h" 2
-
-
-
-void ioc_init(char pin);
-# 28 "main.c" 2
-
-# 1 "./ADC_setup.h" 1
-# 14 "./ADC_setup.h"
 # 1 "C:\\Program Files\\Microchip\\xc8\\v2.40\\pic\\include\\c90\\stdint.h" 1 3
 # 14 "./ADC_setup.h" 2
 
@@ -2668,53 +2644,7 @@ void adc_init(int channel);
 int adc_read();
 void adc_change_channel(int channel);
 int adc_get_channel();
-# 29 "main.c" 2
-
-# 1 "./Setup_TMR0.h" 1
-# 14 "./Setup_TMR0.h"
-# 1 "C:\\Program Files\\Microchip\\xc8\\v2.40\\pic\\include\\c90\\stdint.h" 1 3
-# 14 "./Setup_TMR0.h" 2
-
-
-
-void TMR0_init(void);
-# 30 "main.c" 2
-
-# 1 "./displays.h" 1
-# 14 "./displays.h"
-# 1 "C:\\Program Files\\Microchip\\xc8\\v2.40\\pic\\include\\c90\\stdint.h" 1 3
-# 14 "./displays.h" 2
-
-
-unsigned int HEX1 = 0;
-unsigned int HEX2 = 0;
-
-
-unsigned char displaylist [16] = {
-
-
-    0b00111111,
-    0b00000110,
-    0b01011011,
-    0b01001111,
-    0b01100110,
-    0b01101101,
-    0b01111101,
-    0b00000111,
-    0b01111111,
-    0b01100111,
-    0b01110111,
-    0b01111100,
-    0b00111001,
-    0b01011110,
-    0b01111001,
-    0b01110001,
-};
-
-
-void mux(int selector);
-void display_hex(int value);
-# 31 "main.c" 2
+# 8 "ADC_setup.c" 2
 
 
 
@@ -2722,117 +2652,129 @@ void display_hex(int value);
 
 
 
-int bandera = 0;
+void adc_init(int channel){
 
-int adc_var = 0;
-int select = 0;
+    PIE1bits.ADIE = 1;
+    PIR1bits.ADIF = 0;
 
+    ADCON0bits.ADCS1 = 0;
+    ADCON0bits.ADCS0 = 0;
 
-void setup(void);
-void counter(void);
+    ADCON1bits.VCFG1 = 0;
+    ADCON1bits.VCFG0 = 0;
 
+    ADCON1bits.ADFM = 0;
 
+    adc_change_channel(channel);
 
-void main(void){
-    setup();
-    adc_init(0);
-    TMR0_init();
-    TMR0 = 252;
-    while(1){
-        if (ADCON0bits.GO == 0) {
-            ADCON0bits.GO = 1;
-            display_hex(adc_var);
-        }
+    ADCON0bits.ADON = 1;
+    _delay((unsigned long)((100)*(4000000/4000000.0)));
+}
 
+int adc_read(){
+    return ADRESH;
+}
+
+void adc_change_channel(int channel){
+    if(channel == 0){
+        ADCON0bits.CHS = 0b0000;
+        ANSEL = ANSEL | 0b00000001;
+    }
+    if(channel == 1){
+        ADCON0bits.CHS = 0b0001;
+        ANSEL = ANSEL | 0b00000010;
+    }
+    if(channel == 2){
+        ADCON0bits.CHS = 0b0010;
+        ANSEL = ANSEL | 0b00000100;
+    }
+    if(channel == 3){
+        ADCON0bits.CHS = 0b0011;
+        ANSEL = ANSEL | 0b00001000;
+    }
+    if(channel == 4){
+        ADCON0bits.CHS = 0b0100;
+        ANSEL = ANSEL | 0b00010000;
+    }
+    if(channel == 5){
+        ADCON0bits.CHS = 0b0101;
+        ANSEL = ANSEL | 0b00100000;
+    }
+    if(channel == 6){
+        ADCON0bits.CHS = 0b0110;
+        ANSEL = ANSEL | 0b01000000;
+    }
+    if(channel == 7){
+        ADCON0bits.CHS = 0b0111;
+        ANSEL = ANSEL | 0b10000000;
+    }
+    if(channel == 8){
+        ADCON0bits.CHS = 0b1000;
+        ANSELH = ANSELH | 0b00000001;
+    }
+    if(channel == 9){
+        ADCON0bits.CHS = 0b1001;
+        ANSELH = ANSELH | 0b00000010;
+    }
+    if(channel == 10){
+        ADCON0bits.CHS = 0b1010;
+        ANSELH = ANSELH | 0b00000100;
+    }
+    if(channel == 11){
+        ADCON0bits.CHS = 0b1011;
+        ANSELH = ANSELH | 0b00001000;
+    }
+    if(channel == 12){
+        ADCON0bits.CHS = 0b1100;
+        ANSELH = ANSELH | 0b00010000;
+    }
+    if(channel == 13){
+        ADCON0bits.CHS = 0b1101;
+        ANSELH = ANSELH | 0b00100000;
     }
 }
 
-
-void __attribute__((picinterrupt(("")))) isr(void){
-    if (INTCONbits.T0IF == 1){
-        INTCONbits.T0IE = 0;
-        TMR0 = 252;
-        if (select == 0){
-            mux(select);
-            select = 1;
-        }
-        if (select == 1){
-            mux(select);
-            select = 0;
-        }
+int adc_get_channel(){
+    if(ADCON0bits.CHS == 0b0000){
+        return 0;
     }
-    if (INTCONbits.RBIF == 1){
-        counter();
-        INTCONbits.RBIF = 0;
+    if(ADCON0bits.CHS == 0b0001){
+        return 1;
     }
-    if (PIR1bits.ADIF == 1){
-        adc_var = adc_read();
-        PIR1bits.ADIF = 0;
+    if(ADCON0bits.CHS == 0b0010){
+        return 2;
     }
+    if(ADCON0bits.CHS == 0b0011){
+        return 3;
     }
-
-
-void setup(void){
-
-
-
-
-
-
-    TRISBbits.TRISB6 = 1;
-    TRISBbits.TRISB7 = 1;
-
-    TRISBbits.TRISB0 = 0;
-    TRISBbits.TRISB1 = 0;
-
-    TRISC = 0;
-    TRISD = 0;
-    TRISE = 0;
-
-
-    PORTA = 0;
-    PORTB = 0;
-    PORTC = 0;
-    PORTD = 0;
-    PORTE = 0;
-
-
-
-
-
-
-
-    INTCONbits.GIE = 1;
-    INTCONbits.PEIE = 1;
-
-
-
-
-
-
-
-    ioc_init(7);
-
-    ioc_init(6);
-
-
-
-
-    OSCCONbits.IRCF = 0b110 ;
-    OSCCONbits.SCS = 1;
-}
-# 158 "main.c"
-void counter(void){
-    if (PORTBbits.RB6 == 0){
-        bandera = 1;}
-    if (PORTBbits.RB6 == 1 && bandera == 1){
-        PORTD--;
-        bandera = 0;
+    if(ADCON0bits.CHS == 0b0100){
+        return 4;
     }
-    if (PORTBbits.RB7 == 0){
-        bandera = 2;}
-    if (PORTBbits.RB7 == 1 && bandera == 2){
-        PORTD++;
-        bandera = 0;
+    if(ADCON0bits.CHS == 0b0101){
+        return 5;
+    }
+    if(ADCON0bits.CHS == 0b0110){
+        return 6;
+    }
+    if(ADCON0bits.CHS == 0b0111){
+        return 7;
+    }
+    if(ADCON0bits.CHS == 0b1000){
+        return 8;
+    }
+    if(ADCON0bits.CHS == 0b1001){
+        return 9;
+    }
+    if(ADCON0bits.CHS == 0b1010){
+        return 10;
+    }
+    if(ADCON0bits.CHS == 0b1011){
+        return 11;
+    }
+    if(ADCON0bits.CHS == 0b1100){
+        return 12;
+    }
+    if(ADCON0bits.CHS == 0b1101){
+        return 13;
     }
 }
